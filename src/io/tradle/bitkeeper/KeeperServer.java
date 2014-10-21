@@ -1,17 +1,21 @@
 package io.tradle.bitkeeper;
 
+import java.io.*;
 import java.net.*;
 import java.util.*;
 import java.util.concurrent.*;
 
 import net.tomp2p.connection.*;
-import net.tomp2p.connection.Bindings.*;
+import net.tomp2p.connection.Bindings.Protocol;
 import net.tomp2p.futures.*;
 import net.tomp2p.p2p.*;
 import net.tomp2p.peers.*;
+import net.tomp2p.storage.*;
 
 import org.jboss.netty.bootstrap.*;
 import org.jboss.netty.channel.socket.nio.*;
+
+import com.google.gson.*;
 
 /**
  * An HTTP server that serves key value pares to and from DHT.
@@ -19,20 +23,42 @@ import org.jboss.netty.channel.socket.nio.*;
  */
 public class KeeperServer {
   private static final Random RND = new Random(System.currentTimeMillis());
+  private static final String CONFIG_PATH = "conf/config.json";
   
   public static void main(String[] args) throws Exception {
-    String myIpAddress = args[0];
-    int httpPort = Integer.parseInt(args[1]);
-    int myDhtPort = Integer.parseInt(args[2]);
-    int masterDhtPort = Integer.parseInt(args[3]);
-    String masterDhtIpAddress = args[4];
+    //String myIpAddress = args[0];
+    //int httpPort = Integer.parseInt(args[1]);
+    //int myDhtPort = Integer.parseInt(args[2]);
+    //int masterDhtPort = Integer.parseInt(args[3]);
+    //String masterDhtIpAddress = args[4];
     
-    Peer me = createOwnDhtPeer(myDhtPort, myIpAddress, masterDhtPort, masterDhtIpAddress);
+    Config config = null;
+    
+    Gson gson = new GsonBuilder().create();
+    try {
+      config = gson.fromJson(new BufferedReader(new FileReader(CONFIG_PATH)), Config.class);
+    } catch (FileNotFoundException e) {
+      throw new IllegalStateException("couldn't find config file at path: " + CONFIG_PATH);
+    }
+    
+    String storage = config.storageDir();
+    if (storage != null) {
+      if (storage.length() > 0) {
+        File f = new File(storage);
+        if (!f.isDirectory())
+          throw new IllegalStateException("config parameter 'storageDir' is not a directory: " + storage);
+      }
+      else
+        storage = null;
+    }
+    
+    
+    Peer me = createOwnDhtPeer(config.address().dhtPort(), config.address().address(), storage);
     
     ExecutorService threadPool = Executors.newCachedThreadPool();
     
     // bootstrap to DHT network
-    threadPool.execute(new DhtBoostrapper(me, masterDhtPort, masterDhtIpAddress));
+    threadPool.execute(new DhtBoostrapper(me, config.keepers().get(0).dhtPort(), config.keepers().get(0).dhtAddress()));
     
     // Configure the server.
     ServerBootstrap bootstrap = new ServerBootstrap(new NioServerSocketChannelFactory(Executors.newCachedThreadPool(), Executors.newCachedThreadPool()));
@@ -41,17 +67,18 @@ public class KeeperServer {
     bootstrap.setPipelineFactory(new ServerPipelineFactory(me, threadPool));
 
     // Bind and start to accept incoming connections.
-    bootstrap.bind(new InetSocketAddress(httpPort));
+    bootstrap.bind(new InetSocketAddress(config.address().httpPort()));
 
   }
 
-  public static Peer createOwnDhtPeer(int myPort, String myIp, int masterPort, String masterIp) throws Exception {
+  public static Peer createOwnDhtPeer(int myPort, String myIp, String storageDir) throws Exception {
     InetAddress myIpAddrress = Inet4Address.getByName(myIp);
     Bindings b = new Bindings(Protocol.IPv4, myIpAddrress, myPort, myPort);
     // b.addInterface("eth0");
     Peer client = new PeerMaker(new Number160(RND))
                   .setPorts(myPort)
                   .setEnableIndirectReplication(true)
+                  .setStorage(storageDir != null? new StorageDisk(storageDir) : new StorageMemory())
                   .setBindings(b)
                   .makeAndListen();
     System.out.println("DHT client started and Listening to: " + DiscoverNetworks.discoverInterfaces(b));
