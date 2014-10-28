@@ -47,6 +47,9 @@ public class KeeperServer {
     if (storage != null) {
       if (storage.length() > 0) {
         File f = new File(storage);
+        if (!f.exists())
+        	f.mkdirs();
+        
         if (!f.isDirectory())
           throw new IllegalStateException("config parameter 'storageDir' is not a directory: " + storage);
       }

@@ -42,7 +42,7 @@ public class KeeperHttpRequestHandler extends SimpleChannelUpstreamHandler {
   /*
    * Handles two types of HTTP requests. 
    * 1. For request with a single parameter 'key' returns associated data found in DHT
-   * 2. For request with two parameters 'key' and 'val' places the key value pair into DHT
+   * 2. For request with two parameters 'key' and 'value' places the key value pair into DHT
    */
   @Override
   public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
@@ -54,6 +54,7 @@ public class KeeperHttpRequestHandler extends SimpleChannelUpstreamHandler {
 
     buf.setLength(0);
 
+    boolean ok = false;
     QueryStringDecoder queryStringDecoder = new QueryStringDecoder(request.getUri());
     Map<String, List<String>> params = queryStringDecoder.getParameters();
     if (!params.isEmpty()) {
@@ -65,10 +66,11 @@ public class KeeperHttpRequestHandler extends SimpleChannelUpstreamHandler {
         for (String val : vals) {
           if (key.equals("key"))
             k = val;
-          if (key.equals("val"))
+          else if (key.equals("val"))
             v = val;
         }
       }
+      
       if (k != null) {
         DHTQuery query = new DHTQuery(k, v);
         threadPool.execute(query);
@@ -77,10 +79,11 @@ public class KeeperHttpRequestHandler extends SimpleChannelUpstreamHandler {
         }
         FutureDHT futureDHT = query.getFuture();
         if (futureDHT.isFailed()) {
-          System.err.println(futureDHT.getFailedReason());
+          System.err.println("Value not found for key " + k + ": " + futureDHT.getFailedReason());
           //TODO set return status 404
         }  
         else {
+          ok = true;
           if (v == null) {
             Map<Number160, Data> map = futureDHT.getDataMap();
             for (Data data : map.values()) {
@@ -88,41 +91,29 @@ public class KeeperHttpRequestHandler extends SimpleChannelUpstreamHandler {
               buf.append(value);
             }
           }
-          else
+          else {
+            System.err.println("Value stored for key " + k);
             buf.append("OK");
+          }
         }
       }
     }
-    writeResponse(e);
+    
+    writeResponse(e, ok);
   }
 
-  private void writeResponse(MessageEvent e) {
+  private void writeResponse(MessageEvent e, boolean ok) {
     // Decide whether to close the connection or not.
     boolean keepAlive = isKeepAlive(request);
 
     // Build the response object.
-    HttpResponse response = new DefaultHttpResponse(HTTP_1_1, OK);
+    HttpResponse response = new DefaultHttpResponse(HTTP_1_1, ok ? OK : NOT_FOUND);
     response.setContent(ChannelBuffers.copiedBuffer(buf.toString(), CharsetUtil.UTF_8));
     response.setHeader(CONTENT_TYPE, "text/plain; charset=UTF-8");
 
     if (keepAlive) {
       // Add 'Content-Length' header only for a keep-alive connection.
       response.setHeader(CONTENT_LENGTH, response.getContent().readableBytes());
-    }
-
-    // Encode the cookie.
-    String cookieString = request.getHeader(COOKIE);
-    if (cookieString != null) {
-      CookieDecoder cookieDecoder = new CookieDecoder();
-      Set<Cookie> cookies = cookieDecoder.decode(cookieString);
-      if (!cookies.isEmpty()) {
-        // Reset the cookies if necessary.
-        CookieEncoder cookieEncoder = new CookieEncoder(true);
-        for (Cookie cookie : cookies) {
-          cookieEncoder.addCookie(cookie);
-        }
-        response.addHeader(SET_COOKIE, cookieEncoder.encode());
-      }
     }
 
     // Write the response.
