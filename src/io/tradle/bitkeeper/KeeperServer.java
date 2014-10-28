@@ -23,7 +23,7 @@ import com.google.gson.*;
  */
 public class KeeperServer {
   private static final Random RND = new Random(System.currentTimeMillis());
-  private static final String CONFIG_PATH = "conf/config.json";
+  private static final String[] CONFIG_PATH = new String[]{"conf/config.json", "conf/config1.json"};
   
   public static void main(String[] args) throws Exception {
     //String myIpAddress = args[0];
@@ -32,11 +32,13 @@ public class KeeperServer {
     //int masterDhtPort = Integer.parseInt(args[3]);
     //String masterDhtIpAddress = args[4];
     
+    int cidx = (args == null  ||  args.length == 0) ? 0 : Integer.parseInt(args[0]) - 1;
+      
     Config config = null;
     
     Gson gson = new GsonBuilder().create();
     try {
-      config = gson.fromJson(new BufferedReader(new FileReader(CONFIG_PATH)), Config.class);
+      config = gson.fromJson(new BufferedReader(new FileReader(CONFIG_PATH[cidx])), Config.class);
     } catch (FileNotFoundException e) {
       throw new IllegalStateException("couldn't find config file at path: " + CONFIG_PATH);
     }
