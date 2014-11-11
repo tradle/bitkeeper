@@ -24,7 +24,7 @@ Installation
 3. Run "java -jar bitkeeper.jar path-to-config.json" from the build directory
 
 Then run a second bitkeeper with reverse DHT ports and a different http port, e.g. with this config.json:
-    ```
+    ```json
     {
       "address" : {
         "host": "127.0.0.1",
