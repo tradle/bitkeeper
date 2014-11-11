@@ -105,7 +105,6 @@ public class KeeperServer {
       this.myself = myself;
     }
 
-    @Override
     public void run() {
       while (true) {
         if (!bootstrapped) {

@@ -2,9 +2,9 @@
   "address" : {
     "host": "127.0.0.1",
     "httpPort": 8008,
-	  "dhtPort":  7000
+    "dhtPort":  7000
   },
-  "storageDir": "",
+  "storageDir": "fileStorage",
   "dhtPeerAddresses" : [
     {
       "dhtHost": "127.0.0.1",

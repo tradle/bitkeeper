@@ -39,8 +39,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonPrimitive;
-import com.sun.org.apache.xml.internal.security.exceptions.Base64DecodingException;
-import com.sun.org.apache.xml.internal.security.utils.Base64;
 
 public class KeeperHttpRequestHandler extends SimpleChannelUpstreamHandler {
 
@@ -107,7 +105,6 @@ public class KeeperHttpRequestHandler extends SimpleChannelUpstreamHandler {
 
 		DHTQuery query = new DHTQuery(k, v);
 		query.addListener(new BaseFutureAdapter<FutureDHT>() {
-			@Override
 			public void operationComplete(FutureDHT futureDHT) throws Exception {
 				boolean ok = futureDHT.isSuccess();
 				if (!ok) {
@@ -144,7 +141,6 @@ public class KeeperHttpRequestHandler extends SimpleChannelUpstreamHandler {
 			queries[i] = new DHTQuery(keys[i], null);
 			final int idx = i;
 			queries[i].addListener(new BaseFutureAdapter<FutureDHT>() {
-				@Override
 				public void operationComplete(FutureDHT futureDHT) throws Exception {					
 					if (!futureDHT.isSuccess()) {
 						System.err.println("Value not found for key "
@@ -188,7 +184,6 @@ public class KeeperHttpRequestHandler extends SimpleChannelUpstreamHandler {
 			results.add(JFALSE);
 			queries[i] = new DHTQuery(key, keyValMap.get(key));			
 			queries[i].addListener(new BaseFutureAdapter<FutureDHT>() {
-				@Override
 				public void operationComplete(FutureDHT futureDHT) throws Exception {					
 					if (futureDHT.isSuccess())
 						results.set(idx, JTRUE);
@@ -276,7 +271,6 @@ public class KeeperHttpRequestHandler extends SimpleChannelUpstreamHandler {
 			return dht;
 		}
 
-		@Override
 		public void run() {
 			if (val != null) {
 				try {
