@@ -19,9 +19,16 @@ If only the key is specified, then the value is returned to the output stream: e
 Installation
 ========================
 
+If you want to play with the source code:
+
 1. Clone this repo using: git clone https://github.com/urbien/bitkeeper
 2. Copy the conf directory into the build directory
 3. Run "java -jar bitkeeper.jar path-to-config.json" from the build directory
+
+If you don't want to play with the source code:
+
+1. Run install.sh
+2. Run "java -jar bitkeeper.jar path-to-config.json" from the bitkeeper directory
 
 Then run a second bitkeeper with reverse DHT ports and a different http port, e.g. with this config.json:
 
