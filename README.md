@@ -20,18 +20,31 @@ Installation
 ========================
 
 1. Clone this repo using: git clone https://github.com/urbien/bitkeeper
-2. run: java io.tradle.bitkeeper.KeeperServer http-server-ip-address http-server-port DHT-server-port DHT-second-server-port DHT-server-ip-address
+2. Copy the conf directory into the build directory
+3. Run "java -jar bitkeeper.jar path-to-config.json" from the build directory
 
-Then run a second bitkeeper with reverse DHT ports and a different http port: e.g.:
-
-`127.0.0.1 8080 7002  7001 127.0.0.1`
-
-`127.0.0.1 8081 7001  7002 127.0.0.1`
+Then run a second bitkeeper with reverse DHT ports and a different http port, e.g. with this config.json:
+    ```
+    {
+      "address" : {
+        "host": "127.0.0.1",
+        "httpPort": 8009,
+        "dhtPort":  7001
+      },
+      "storageDir": "fileStorage",
+      "dhtPeerAddresses" : [
+        {
+          "dhtHost": "127.0.0.1",
+          "dhtPort": 7000
+        },
+      ]
+    }
+    ```
 
 Now you can send save value on one bitkeeper server and pick it up on another bitkeeper server, e.g.:
-`http://127.0.0.1:8080?key=k1&val=v1`
+`http://127.0.0.1:8008?key=k1&val=v1`
 
-`http://127.0.0.1:8081?key=k1`
+`http://127.0.0.1:8009?key=k1`
 
 
 Learn about Bitkeeper architecture in [Tradle wiki](https://github.com/urbien/Tradle/wiki)
