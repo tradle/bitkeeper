@@ -24,7 +24,8 @@ Installation
 3. Run "java -jar bitkeeper.jar path-to-config.json" from the build directory
 
 Then run a second bitkeeper with reverse DHT ports and a different http port, e.g. with this config.json:
-    ```json
+
+``` json
     {
       "address" : {
         "host": "127.0.0.1",
@@ -36,10 +37,10 @@ Then run a second bitkeeper with reverse DHT ports and a different http port, e.
         {
           "dhtHost": "127.0.0.1",
           "dhtPort": 7000
-        },
+        }
       ]
     }
-    ```
+```
 
 Now you can send save value on one bitkeeper server and pick it up on another bitkeeper server, e.g.:
 `http://127.0.0.1:8008?key=k1&val=v1`
