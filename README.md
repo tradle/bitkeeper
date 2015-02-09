@@ -2,6 +2,7 @@ bitkeeper
 =========
 
 Bitjoe uses Bitkeeper to save business transactions. 
+
 1. Bitcoin blockchain is a precious resources and we can only put a hash of the transaction in it. 
 2. The body of the transaction bitjoe sends to bitkeeper for keeping.
 
